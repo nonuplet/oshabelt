@@ -13,7 +13,6 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func main() {
@@ -36,6 +35,14 @@ type User struct {
 	name string
 	id   string
 	uuid string
+	ch   chan Message
+}
+
+type Message struct {
+	name      string
+	id        string
+	message   string
+	timestamp string
 }
 
 type ChatServer struct {
@@ -54,7 +61,7 @@ func (server *ChatServer) GetUser(uuid string) (*User, bool) {
 func (server *ChatServer) AddUser(user *User) (*User, error) {
 	if _, exist := server.GetUser(user.uuid); !exist {
 		// TODO: 途中でユーザ削除が発生することを考慮し、idをindexで振りたいが、並列でリクエスト処理するとidが衝突しないか？
-		u := User{user.name, strconv.Itoa(len(server.users)), user.uuid}
+		u := User{user.name, strconv.Itoa(len(server.users)), user.uuid, make(chan Message)}
 		server.users = append(server.users, u)
 		return &u, nil
 	} else {
@@ -70,6 +77,13 @@ func (server *ChatServer) DeleteUser(uuid string) (*User, error) {
 		}
 	}
 	return nil, fmt.Errorf("failed to delete user: uuid not found")
+}
+
+func (server *ChatServer) Broadcast(msg Message) error {
+	for _, u := range server.users {
+		u.ch <- msg
+	}
+	return nil
 }
 
 func (server *ChatServer) Connect(ctx context.Context, req *connect.Request[chatv1.ConnectRequest]) (*connect.Response[chatv1.ConnectResponse], error) {
@@ -105,6 +119,15 @@ func (server *ChatServer) Talk(ctx context.Context, req *connect.Request[chatv1.
 
 	if ok {
 		slog.Info("[Talk]", "user", user.name, "msg", msg)
+		if err := server.Broadcast(Message{
+			name:      user.name,
+			id:        user.id,
+			message:   msg,
+			timestamp: "",
+		}); err != nil {
+			return nil, err
+		}
+
 		res := connect.NewResponse(&chatv1.TalkResponse{
 			Message: msg,
 		})
@@ -131,20 +154,25 @@ func (server *ChatServer) Disconnect(ctx context.Context, req *connect.Request[c
 }
 
 func (server *ChatServer) Subscribe(ctx context.Context, req *connect.Request[chatv1.SubscribeRequest], stream *connect.ServerStream[chatv1.SubscribeStreamResponse]) error {
-	count := 5
-	for i := 0; i < count; i++ {
-		res := &chatv1.SubscribeStreamResponse{
-			Name:    "test name",
-			Id:      strconv.Itoa(i),
-			Message: "count: " + strconv.Itoa(i),
-		}
+	uuid := req.Msg.Uuid
+	user, ok := server.GetUser(uuid)
 
+	if !ok {
+		return connect.NewError(connect.CodeNotFound, fmt.Errorf("uuid not exist"))
+	}
+
+	for msg := range user.ch {
+		res := &chatv1.SubscribeStreamResponse{
+			Name:    msg.name,
+			Id:      msg.id,
+			Message: msg.message,
+		}
 		if err := stream.Send(res); err != nil {
 			return err
 		}
-		slog.Info("[Subscribe]", "send", 0)
-		time.Sleep(time.Second * 1)
+		slog.Info("[Subscribe]", "send_to", user.name, "uuid", user.uuid)
 	}
+
 	return nil
 }
 
