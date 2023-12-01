@@ -1,0 +1,18 @@
+version: v1
+plugins:
+  - plugin: go
+    out: ../backend/api
+    opt: paths=source_relative
+  - plugin: connect-go
+    out: ../backend/api
+    opt: paths=source_relative
+  - plugin: es
+    path: ../frontend/node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es
+    out: ../frontend/src/api
+    opt:
+      - target=ts
+  - plugin: connect-es
+    path: ../frontend/node_modules/@connectrpc/protoc-gen-connect-es/bin/protoc-gen-connect-es
+    out: ../frontend/src/api
+    opt:
+      - target=ts

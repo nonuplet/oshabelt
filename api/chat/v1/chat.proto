@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package chat.v1;
+option go_package = "backend/api/chat/v1;chatv1";
+
+service ChatService {
+  rpc Connect (ConnectRequest) returns (ConnectResponse);
+  rpc Talk (TalkRequest) returns (TalkResponse);
+}
+
+message ConnectRequest {
+  string name = 1;
+}
+
+message ConnectResponse {
+  string uuid = 1;
+}
+
+message TalkRequest {
+  string uuid = 1;
+  string message = 2;
+}
+
+message TalkResponse {
+  string message = 1;
+}
