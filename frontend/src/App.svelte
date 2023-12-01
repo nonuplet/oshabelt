@@ -14,22 +14,41 @@
 
     const client = createPromiseClient(ChatService, transport)
 
+    async function getStream(uuid: string) {
+        const stream = client.subscribe({
+            uuid
+        })
+
+
+        try {
+            for await (const message of stream) {
+                console.log(message)
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     onMount(async () => {
         const res = await client.connect({
             name: "hoge fuga"
         })
         console.log(res)
 
+        getStream(res.uuid)
+
+
         setTimeout(async () => {
             const talk = await client.talk({
                 uuid: res.uuid,
                 message: "test message"
             })
-            console.log(talk)
-            const dlt = await client.disconnect({
-                uuid: res.uuid
-            })
-            console.log(dlt)
+
+
+            // const dlt = await client.disconnect({
+            //     uuid: res.uuid
+            // })
+            // console.log(dlt)
         }, 1000)
 
     })

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -127,6 +128,24 @@ func (server *ChatServer) Disconnect(ctx context.Context, req *connect.Request[c
 		slog.Error("[Disconnect]", "error", err)
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
+}
+
+func (server *ChatServer) Subscribe(ctx context.Context, req *connect.Request[chatv1.SubscribeRequest], stream *connect.ServerStream[chatv1.SubscribeStreamResponse]) error {
+	count := 5
+	for i := 0; i < count; i++ {
+		res := &chatv1.SubscribeStreamResponse{
+			Name:    "test name",
+			Id:      strconv.Itoa(i),
+			Message: "count: " + strconv.Itoa(i),
+		}
+
+		if err := stream.Send(res); err != nil {
+			return err
+		}
+		slog.Info("[Subscribe]", "send", 0)
+		time.Sleep(time.Second * 1)
+	}
+	return nil
 }
 
 //type chatServer struct {
