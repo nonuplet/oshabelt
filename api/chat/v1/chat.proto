@@ -6,6 +6,8 @@ option go_package = "backend/api/chat/v1;chatv1";
 service ChatService {
   rpc Connect (ConnectRequest) returns (ConnectResponse);
   rpc Talk (TalkRequest) returns (TalkResponse);
+  rpc Disconnect (DisconnectRequest) returns (DisconnectResponse);
+  rpc Subscribe (SubscribeRequest) returns (stream SubscribeStreamResponse);
 }
 
 message ConnectRequest {
@@ -13,7 +15,8 @@ message ConnectRequest {
 }
 
 message ConnectResponse {
-  string uuid = 1;
+  string id = 1;
+  string uuid = 2;
 }
 
 message TalkRequest {
@@ -23,4 +26,22 @@ message TalkRequest {
 
 message TalkResponse {
   string message = 1;
+}
+
+message DisconnectRequest {
+  string uuid = 1;
+}
+
+message DisconnectResponse{
+
+}
+
+message SubscribeRequest {
+  string uuid = 1;
+}
+
+message SubscribeStreamResponse {
+  string name = 1;
+  string id = 2;
+  string message = 3;
 }

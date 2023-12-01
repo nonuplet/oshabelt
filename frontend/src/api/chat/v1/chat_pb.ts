@@ -48,7 +48,12 @@ export class ConnectRequest extends Message<ConnectRequest> {
  */
 export class ConnectResponse extends Message<ConnectResponse> {
   /**
-   * @generated from field: string uuid = 1;
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  /**
+   * @generated from field: string uuid = 2;
    */
   uuid = "";
 
@@ -60,7 +65,8 @@ export class ConnectResponse extends Message<ConnectResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "chat.v1.ConnectResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uuid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "uuid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConnectResponse {
@@ -157,6 +163,160 @@ export class TalkResponse extends Message<TalkResponse> {
 
   static equals(a: TalkResponse | PlainMessage<TalkResponse> | undefined, b: TalkResponse | PlainMessage<TalkResponse> | undefined): boolean {
     return proto3.util.equals(TalkResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message chat.v1.DisconnectRequest
+ */
+export class DisconnectRequest extends Message<DisconnectRequest> {
+  /**
+   * @generated from field: string uuid = 1;
+   */
+  uuid = "";
+
+  constructor(data?: PartialMessage<DisconnectRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "chat.v1.DisconnectRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uuid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DisconnectRequest {
+    return new DisconnectRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DisconnectRequest {
+    return new DisconnectRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DisconnectRequest {
+    return new DisconnectRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DisconnectRequest | PlainMessage<DisconnectRequest> | undefined, b: DisconnectRequest | PlainMessage<DisconnectRequest> | undefined): boolean {
+    return proto3.util.equals(DisconnectRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message chat.v1.DisconnectResponse
+ */
+export class DisconnectResponse extends Message<DisconnectResponse> {
+  constructor(data?: PartialMessage<DisconnectResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "chat.v1.DisconnectResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DisconnectResponse {
+    return new DisconnectResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DisconnectResponse {
+    return new DisconnectResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DisconnectResponse {
+    return new DisconnectResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DisconnectResponse | PlainMessage<DisconnectResponse> | undefined, b: DisconnectResponse | PlainMessage<DisconnectResponse> | undefined): boolean {
+    return proto3.util.equals(DisconnectResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message chat.v1.SubscribeRequest
+ */
+export class SubscribeRequest extends Message<SubscribeRequest> {
+  /**
+   * @generated from field: string uuid = 1;
+   */
+  uuid = "";
+
+  constructor(data?: PartialMessage<SubscribeRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "chat.v1.SubscribeRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uuid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SubscribeRequest {
+    return new SubscribeRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SubscribeRequest {
+    return new SubscribeRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SubscribeRequest {
+    return new SubscribeRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SubscribeRequest | PlainMessage<SubscribeRequest> | undefined, b: SubscribeRequest | PlainMessage<SubscribeRequest> | undefined): boolean {
+    return proto3.util.equals(SubscribeRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message chat.v1.SubscribeStreamResponse
+ */
+export class SubscribeStreamResponse extends Message<SubscribeStreamResponse> {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name = "";
+
+  /**
+   * @generated from field: string id = 2;
+   */
+  id = "";
+
+  /**
+   * @generated from field: string message = 3;
+   */
+  message = "";
+
+  constructor(data?: PartialMessage<SubscribeStreamResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "chat.v1.SubscribeStreamResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SubscribeStreamResponse {
+    return new SubscribeStreamResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SubscribeStreamResponse {
+    return new SubscribeStreamResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SubscribeStreamResponse {
+    return new SubscribeStreamResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SubscribeStreamResponse | PlainMessage<SubscribeStreamResponse> | undefined, b: SubscribeStreamResponse | PlainMessage<SubscribeStreamResponse> | undefined): boolean {
+    return proto3.util.equals(SubscribeStreamResponse, a, b);
   }
 }
 

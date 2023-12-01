@@ -26,7 +26,11 @@
                 message: "test message"
             })
             console.log(talk)
-        }, 2000)
+            const dlt = await client.disconnect({
+                uuid: res.uuid
+            })
+            console.log(dlt)
+        }, 1000)
 
     })
 

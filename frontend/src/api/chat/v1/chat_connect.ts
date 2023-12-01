@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { ConnectRequest, ConnectResponse, TalkRequest, TalkResponse } from "./chat_pb.js";
+import { ConnectRequest, ConnectResponse, DisconnectRequest, DisconnectResponse, SubscribeRequest, SubscribeStreamResponse, TalkRequest, TalkResponse } from "./chat_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -29,6 +29,24 @@ export const ChatService = {
       I: TalkRequest,
       O: TalkResponse,
       kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc chat.v1.ChatService.Disconnect
+     */
+    disconnect: {
+      name: "Disconnect",
+      I: DisconnectRequest,
+      O: DisconnectResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc chat.v1.ChatService.Subscribe
+     */
+    subscribe: {
+      name: "Subscribe",
+      I: SubscribeRequest,
+      O: SubscribeStreamResponse,
+      kind: MethodKind.ServerStreaming,
     },
   }
 } as const;
