@@ -3,55 +3,7 @@
     import viteLogo from '/vite.svg'
     import Counter from './lib/Counter.svelte'
 
-    import {createPromiseClient} from "@connectrpc/connect";
-    import {createConnectTransport} from "@connectrpc/connect-web";
-    import {ChatService} from "./api/chat/v1/chat_connect";
-    import {onMount} from "svelte";
 
-    const transport = createConnectTransport({
-        baseUrl: "http://localhost:8085"
-    })
-
-    const client = createPromiseClient(ChatService, transport)
-
-    async function getStream(uuid: string) {
-        const stream = client.subscribe({
-            uuid
-        })
-
-
-        try {
-            for await (const message of stream) {
-                console.log(message)
-            }
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    onMount(async () => {
-        const res = await client.connect({
-            name: "hoge fuga"
-        })
-        console.log(res)
-
-        getStream(res.uuid)
-
-
-        setTimeout(async () => {
-            const talk = await client.talk({
-                uuid: res.uuid,
-                message: "test message"
-            })
-
-
-            // const dlt = await client.disconnect({
-            //     uuid: res.uuid
-            // })
-            // console.log(dlt)
-        }, 1000)
-
-    })
 
 </script>
 
