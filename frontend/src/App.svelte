@@ -1,54 +1,99 @@
 <script lang="ts">
-    import svelteLogo from './assets/svelte.svg'
-    import viteLogo from '/vite.svg'
-    import Counter from './lib/Counter.svelte'
+    import {ChatClient} from "./entities/ChatClient";
+    import type {MessageResponse} from "./api/chat/v1/chat_pb";
+    import Header from "./components/Header.svelte";
 
+    const client = new ChatClient("http://localhost:8085")
 
+    let name = ""
+    let message = ""
 
+    let talks: MessageResponse[] = []
+
+    const connect = async () => {
+        if (name === "") return
+        try {
+            await client.connect(name)
+            client.subscribe(onMessage)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    const disconnect = async () => {
+        await client.disconnect()
+    }
+
+    const talk = async () => {
+        if (message === "") return
+        await client.talk(message)
+    }
+
+    const onMessage = (message: MessageResponse) => {
+        console.log(message)
+        talks = [...talks, message]
+    }
 </script>
 
+<Header/>
+
 <main>
-    <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-            <img src={viteLogo} class="logo" alt="Vite Logo"/>
-        </a>
-        <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-            <img src={svelteLogo} class="logo svelte" alt="Svelte Logo"/>
-        </a>
+    <div class="control">
+        <div class="connect">
+            <span>name:</span>
+            <input bind:value={name} placeholder="名前を入力してください"/>
+            <button class="connect-button" on:click={connect}>Connect</button>
+            <button on:click={disconnect}>Disconnect</button>
+        </div>
+
+        <div class="talk">
+            <input bind:value={message}/>
+            <button on:click={talk}>Send</button>
+        </div>
     </div>
-    <h1>Vite + Svelte</h1>
-
-    <div class="card">
-        <Counter/>
+    <div class="message-container">
+        {#each talks as talk}
+            <div class="message-box">
+                <p class="message-name">{talk.name}</p>
+                <p class="message-text">{talk.message}</p>
+            </div>
+        {/each}
     </div>
-
-    <p>
-        Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the
-        official Svelte app framework powered by Vite!
-    </p>
-
-    <p class="read-the-docs">
-        Click on the Vite and Svelte logos to learn more
-    </p>
 </main>
 
-<style>
-    .logo {
-        height: 6em;
-        padding: 1.5em;
-        will-change: filter;
-        transition: filter 300ms;
-    }
+<style lang="sass">
+    main
+        width: 100vw
+        margin: 0
+        height: 0
 
-    .logo:hover {
-        filter: drop-shadow(0 0 2em #646cffaa);
-    }
+    .control
+        border: #808080 2px solid
+        padding: 1rem
 
-    .logo.svelte:hover {
-        filter: drop-shadow(0 0 2em #ff3e00aa);
-    }
+        .connect
+            margin-bottom: 2rem
 
-    .read-the-docs {
-        color: #888;
-    }
+            .connect-button
+                margin-right: 4rem
+
+
+    .message-container
+        width: 100%
+        min-height: 30rem
+        margin: 0
+        padding: 0.5rem 1rem
+
+        .message-box
+            background-color: #eaeaea
+            width: 100%
+            margin-bottom: 2rem
+            color: black
+
+            .message-name
+                width: 100%
+
+            .message-text
+                width: 100%
+
+
 </style>

@@ -63,8 +63,6 @@ func (server *ChatServer) CurrentTime() string {
 }
 
 func (server *ChatServer) GetUser(uuid string) (*User, bool) {
-	server.userMutex.RLock()
-	defer server.userMutex.RUnlock()
 	for _, u := range server.users {
 		if u.uuid == uuid {
 			return &u, true
@@ -74,8 +72,6 @@ func (server *ChatServer) GetUser(uuid string) (*User, bool) {
 }
 
 func (server *ChatServer) AddUser(user *User) (*User, error) {
-	server.userMutex.RLock()
-	defer server.userMutex.RUnlock()
 	if _, exist := server.GetUser(user.uuid); !exist {
 		u := User{user.name, server.userIndex, user.uuid, make(chan Message)}
 		server.users = append(server.users, u)
@@ -87,10 +83,6 @@ func (server *ChatServer) AddUser(user *User) (*User, error) {
 }
 
 func (server *ChatServer) DeleteUser(uuid string) (*User, error) {
-	server.userMutex.Lock()
-	fmt.Println("disconnect start")
-	defer fmt.Println("disconnect end")
-	defer server.userMutex.Unlock()
 	for i, u := range server.users {
 		if u.uuid == uuid {
 			server.users = append(server.users[:i], server.users[i+1:]...)
@@ -101,8 +93,6 @@ func (server *ChatServer) DeleteUser(uuid string) (*User, error) {
 }
 
 func (server *ChatServer) Broadcast(msg Message) {
-	server.userMutex.RLock() // ループ中にユーザ削除が発生するのを防止
-	defer server.userMutex.RUnlock()
 	for _, u := range server.users {
 		u.ch <- msg
 	}
