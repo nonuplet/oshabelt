@@ -2,98 +2,103 @@
     import {ChatClient} from "./entities/ChatClient";
     import type {MessageResponse} from "./api/chat/v1/chat_pb";
     import Header from "./components/Header.svelte";
+    import ChatBox from "./components/ChatBox.svelte";
+    import {client} from "./store";
+    import RegisterOverlay from "./components/RegisterOverlay.svelte";
+    import MessageCard from "./components/MessageCard.svelte";
+    import type {Message} from "./entities/Message";
+    import {convertMessage} from "./entities/Message";
+    import {onMount, tick} from "svelte";
 
-    const client = new ChatClient("http://localhost:8085")
+    client.set(new ChatClient("http://localhost:8085"))
 
-    let name = ""
-    let message = ""
+    let connecting = false
+    let messageContainer: HTMLElement
 
-    let talks: MessageResponse[] = []
+    let talks: Message[] = []
 
-    const connect = async () => {
+    const connect = async (name: string) => {
         if (name === "") return
         try {
-            await client.connect(name)
-            client.subscribe(onMessage)
+            await $client.connect(name)
+            connecting = true
+            $client.subscribe(onMessage)
         } catch (e) {
             console.error(e)
         }
     }
     const disconnect = async () => {
-        await client.disconnect()
+        await $client.disconnect()
     }
 
-    const talk = async () => {
-        if (message === "") return
-        await client.talk(message)
+    const talk = async (text: string) => {
+        if (text === "") return
+        await $client.talk(text)
     }
 
-    const onMessage = (message: MessageResponse) => {
+    const onMessage = async (message: MessageResponse) => {
         console.log(message)
-        talks = [...talks, message]
+        const talk = convertMessage(message)
+        talks = [...talks, talk]
+        autoScroll()
     }
+
+    const autoScroll = async () => {
+        await tick()
+        messageContainer.scrollTo({
+            top: messageContainer.scrollHeight,
+            left: 0,
+            behavior: "smooth"
+        })
+    }
+
+    onMount(() => {
+        messageContainer = document.getElementById("message-container") as HTMLElement
+    })
 </script>
 
-<Header/>
 
+{#if !connecting}
+    <RegisterOverlay connect={connect}/>
+{/if}
 <main>
-    <div class="control">
-        <div class="connect">
-            <span>name:</span>
-            <input bind:value={name} placeholder="名前を入力してください"/>
-            <button class="connect-button" on:click={connect}>Connect</button>
-            <button on:click={disconnect}>Disconnect</button>
-        </div>
+    <Header/>
 
-        <div class="talk">
-            <input bind:value={message}/>
-            <button on:click={talk}>Send</button>
-        </div>
-    </div>
-    <div class="message-container">
+    <div id="message-container">
         {#each talks as talk}
-            <div class="message-box">
-                <p class="message-name">{talk.name}</p>
-                <p class="message-text">{talk.message}</p>
-            </div>
+            <MessageCard message={talk}/>
         {/each}
     </div>
+
+    <ChatBox send={talk}/>
 </main>
 
 <style lang="sass">
     main
-        width: 100vw
-        margin: 0
-        height: 0
+        height: 100%
+        display: flex
+        flex-flow: column
 
-    .control
-        border: #808080 2px solid
-        padding: 1rem
-
-        .connect
-            margin-bottom: 2rem
-
-            .connect-button
-                margin-right: 4rem
-
-
-    .message-container
+    #message-container
         width: 100%
-        min-height: 30rem
+        flex-grow: 1
+        overflow-y: scroll
         margin: 0
         padding: 0.5rem 1rem
 
-        .message-box
-            background-color: #eaeaea
-            width: 100%
-            margin-bottom: 2rem
-            color: black
+        $sb-track-color: #2b2b2b
+        $sb-thumb-color: #b0b0b0
+        $sb-size: 10px
+        scrollbar-color: $sb-thumb-color $sb-track-color
 
-            .message-name
-                width: 100%
+        &::-webkit-scrollbar
+            width: $sb-size
 
-            .message-text
-                width: 100%
+        &::-webkit-scrollbar-track
+            background: $sb-track-color
+            border-radius: $sb-size
 
-
+        &::-webkit-scrollbar-thumb
+            background: $sb-thumb-color
+            border-radius: $sb-size
 </style>
