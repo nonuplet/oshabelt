@@ -1,4 +1,4 @@
-module backend
+module oshabelt/backend
 
 go 1.20
 

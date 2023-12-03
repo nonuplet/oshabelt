@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package chat.v1;
-option go_package = "backend/api/chat/v1;chatv1";
+option go_package = "oshabelt/backend/api/chat/v1;chatv1";
 
 service ChatService {
   rpc Connect (ConnectRequest) returns (ConnectResponse);
