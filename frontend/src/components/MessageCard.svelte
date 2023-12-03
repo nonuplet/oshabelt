@@ -18,27 +18,42 @@
     </div>
 {/if}
 
+{#if message.type === MessageType.MSG_CONNECT}
+    <div class="connected">
+        <p class="text">{message.name} さんが入室しました</p>
+    </div>
+{/if}
+
 <style lang="sass">
-    .message
-        background-color: #3e3e3e
-        border: rgba(0,0,0,0.2) 1px solid
-        border-radius: 10px
-        padding: 0.3rem 1.5rem
-        margin-bottom: 10px
+  .message
+    background-color: #3e3e3e
+    border: rgba(0, 0, 0, 0.2) 1px solid
+    border-radius: 10px
+    padding: 0.3rem 1.5rem
+    margin-bottom: 10px
 
-        &.self
-            background-color: #4c5b4a
+    &.self
+      background-color: #4c5b4a
 
-        .name
-            font-size: large
-            margin-bottom: 3px
+    .name
+      font-size: large
+      margin-bottom: 3px
 
-        .text
-            padding: 0 1rem
+    .text
+      padding: 0 1rem
 
-        .timestamp
-            text-align: right
-            color: #909090
-            font-size: small
+    .timestamp
+      text-align: right
+      color: #909090
+      font-size: small
+
+  .connected
+    width: 100%
+    margin: 20px 0
+    padding: 0 1rem
+
+    .text
+      color: #b0b0b0
+      text-align: center
 
 </style>
