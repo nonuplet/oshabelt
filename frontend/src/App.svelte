@@ -1,79 +1,117 @@
 <script lang="ts">
-    import svelteLogo from './assets/svelte.svg'
-    import viteLogo from '/vite.svg'
-    import Counter from './lib/Counter.svelte'
+    import {ChatClient} from "./entities/ChatClient";
+    import type {MessageResponse} from "./api/chat/v1/chat_pb";
+    import {MessageType} from "./api/chat/v1/chat_pb";
+    import Header from "./components/Header.svelte";
+    import ChatBox from "./components/ChatBox.svelte";
+    import {client} from "./store";
+    import RegisterOverlay from "./components/RegisterOverlay.svelte";
+    import MessageCard from "./components/MessageCard.svelte";
+    import type {Message} from "./entities/Message";
+    import {convertMessage} from "./entities/Message";
+    import {onMount, tick} from "svelte";
 
-    import {createPromiseClient} from "@connectrpc/connect";
-    import {createConnectTransport} from "@connectrpc/connect-web";
-    import {ChatService} from "./api/chat/v1/chat_connect";
-    import {onMount} from "svelte";
+    client.set(new ChatClient("http://localhost:8085"))
 
-    const transport = createConnectTransport({
-        baseUrl: "http://localhost:8085"
-    })
+    let connecting = false
+    let messageContainer: HTMLElement
 
-    const client = createPromiseClient(ChatService, transport)
+    let talks: Message[] = []
 
-    onMount(async () => {
-        const res = await client.connect({
-            name: "hoge fuga"
+    const connect = async (name: string) => {
+        if (name === "") return
+        try {
+            await $client.connect(name)
+            connecting = true
+            onMessage({
+                type: MessageType.MSG_CONNECT,
+                name: "",
+                id: $client.user.id,
+                timestamp: new Date().toISOString()
+            } as MessageResponse)
+            $client.subscribe(onMessage)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    const disconnect = async () => {
+        await $client.disconnect()
+    }
+
+    const talk = async (text: string) => {
+        text = text.trimStart().trimEnd()
+        if (text === "") return
+        try {
+            const res = await $client.talk(text) as MessageResponse
+            onMessage(res)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    const onMessage = async (message: MessageResponse) => {
+        console.log(message)
+        const talk = convertMessage(message)
+        talks = [...talks, talk]
+        autoScroll()
+    }
+
+    const autoScroll = async () => {
+        await tick()
+        messageContainer.scrollTo({
+            top: messageContainer.scrollHeight,
+            left: 0,
+            behavior: "smooth"
         })
-        console.log(res)
+    }
 
-        setTimeout(async () => {
-            const talk = await client.talk({
-                uuid: res.uuid,
-                message: "test message"
-            })
-            console.log(talk)
-        }, 2000)
-
+    onMount(() => {
+        messageContainer = document.getElementById("message-container") as HTMLElement
     })
-
 </script>
 
+
+{#if !connecting}
+    <RegisterOverlay connect={connect}/>
+{/if}
 <main>
-    <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-            <img src={viteLogo} class="logo" alt="Vite Logo"/>
-        </a>
-        <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-            <img src={svelteLogo} class="logo svelte" alt="Svelte Logo"/>
-        </a>
-    </div>
-    <h1>Vite + Svelte</h1>
+    <Header/>
 
-    <div class="card">
-        <Counter/>
+    <div id="message-container">
+        {#each talks as talk}
+            <MessageCard message={talk}/>
+        {/each}
     </div>
 
-    <p>
-        Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the
-        official Svelte app framework powered by Vite!
-    </p>
-
-    <p class="read-the-docs">
-        Click on the Vite and Svelte logos to learn more
-    </p>
+    <ChatBox send={talk}/>
 </main>
 
-<style>
-    .logo {
-        height: 6em;
-        padding: 1.5em;
-        will-change: filter;
-        transition: filter 300ms;
-    }
+<style lang="sass">
+  main
+    height: 100%
+    display: flex
+    flex-flow: column
 
-    .logo:hover {
-        filter: drop-shadow(0 0 2em #646cffaa);
-    }
+  #message-container
+    width: 100%
+    flex-grow: 1
+    overflow-y: scroll
+    margin: 0
+    padding: 0.5rem 1rem
 
-    .logo.svelte:hover {
-        filter: drop-shadow(0 0 2em #ff3e00aa);
-    }
+    $sb-track-color: #2b2b2b
+    $sb-thumb-color: #b0b0b0
+    $sb-size: 10px
+    scrollbar-color: $sb-thumb-color $sb-track-color
 
-    .read-the-docs {
-        color: #888;
-    }
+    &::-webkit-scrollbar
+      width: $sb-size
+
+    &::-webkit-scrollbar-track
+      background: $sb-track-color
+      border-radius: $sb-size
+
+    &::-webkit-scrollbar-thumb
+      background: $sb-thumb-color
+      border-radius: $sb-size
 </style>

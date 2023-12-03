@@ -1,11 +1,20 @@
 syntax = "proto3";
 
 package chat.v1;
-option go_package = "backend/api/chat/v1;chatv1";
+option go_package = "oshabelt/backend/api/chat/v1;chatv1";
 
 service ChatService {
   rpc Connect (ConnectRequest) returns (ConnectResponse);
-  rpc Talk (TalkRequest) returns (TalkResponse);
+  rpc Talk (TalkRequest) returns (MessageResponse);
+  rpc Disconnect (DisconnectRequest) returns (DisconnectResponse);
+  rpc Subscribe (SubscribeRequest) returns (stream MessageResponse);
+}
+
+enum MessageType {
+  MSG_UNKNOWN = 0;
+  MSG_TALK = 1;
+  MSG_CONNECT = 2;
+  // 今のところdisconnectは通知しない MSG_DISCONNECT = 3;
 }
 
 message ConnectRequest {
@@ -13,7 +22,8 @@ message ConnectRequest {
 }
 
 message ConnectResponse {
-  string uuid = 1;
+  uint32 id = 1;
+  string uuid = 2;
 }
 
 message TalkRequest {
@@ -21,6 +31,21 @@ message TalkRequest {
   string message = 2;
 }
 
-message TalkResponse {
-  string message = 1;
+message MessageResponse {
+  MessageType type = 1;
+  string name = 2;
+  uint32 id = 3;
+  string message = 4;
+  string timestamp = 5;
+}
+
+message DisconnectRequest {
+  string uuid = 1;
+}
+
+message DisconnectResponse{
+}
+
+message SubscribeRequest {
+  string uuid = 1;
 }

@@ -1,8 +1,11 @@
-import './app.css'
+import './app.sass'
 import App from './App.svelte'
 
+const root = document.getElementById("app") as HTMLElement
+
+// @ts-ignore
 const app = new App({
-  target: document.body
+  target: root
 })
 
 export default app
