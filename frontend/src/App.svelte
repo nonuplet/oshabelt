@@ -1,6 +1,7 @@
 <script lang="ts">
     import {ChatClient} from "./entities/ChatClient";
     import type {MessageResponse} from "./api/chat/v1/chat_pb";
+    import {MessageType} from "./api/chat/v1/chat_pb";
     import Header from "./components/Header.svelte";
     import ChatBox from "./components/ChatBox.svelte";
     import {client} from "./store";
@@ -22,6 +23,12 @@
         try {
             await $client.connect(name)
             connecting = true
+            onMessage({
+                type: MessageType.MSG_CONNECT,
+                name: "",
+                id: $client.user.id,
+                timestamp: new Date().toISOString()
+            } as MessageResponse)
             $client.subscribe(onMessage)
         } catch (e) {
             console.error(e)
@@ -33,7 +40,12 @@
 
     const talk = async (text: string) => {
         if (text === "") return
-        await $client.talk(text)
+        try {
+            const res = await $client.talk(text) as MessageResponse
+            onMessage(res)
+        } catch (e) {
+            console.error(e)
+        }
     }
 
     const onMessage = async (message: MessageResponse) => {
@@ -74,31 +86,31 @@
 </main>
 
 <style lang="sass">
-    main
-        height: 100%
-        display: flex
-        flex-flow: column
+  main
+    height: 100%
+    display: flex
+    flex-flow: column
 
-    #message-container
-        width: 100%
-        flex-grow: 1
-        overflow-y: scroll
-        margin: 0
-        padding: 0.5rem 1rem
+  #message-container
+    width: 100%
+    flex-grow: 1
+    overflow-y: scroll
+    margin: 0
+    padding: 0.5rem 1rem
 
-        $sb-track-color: #2b2b2b
-        $sb-thumb-color: #b0b0b0
-        $sb-size: 10px
-        scrollbar-color: $sb-thumb-color $sb-track-color
+    $sb-track-color: #2b2b2b
+    $sb-thumb-color: #b0b0b0
+    $sb-size: 10px
+    scrollbar-color: $sb-thumb-color $sb-track-color
 
-        &::-webkit-scrollbar
-            width: $sb-size
+    &::-webkit-scrollbar
+      width: $sb-size
 
-        &::-webkit-scrollbar-track
-            background: $sb-track-color
-            border-radius: $sb-size
+    &::-webkit-scrollbar-track
+      background: $sb-track-color
+      border-radius: $sb-size
 
-        &::-webkit-scrollbar-thumb
-            background: $sb-thumb-color
-            border-radius: $sb-size
+    &::-webkit-scrollbar-thumb
+      background: $sb-thumb-color
+      border-radius: $sb-size
 </style>

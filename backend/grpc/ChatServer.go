@@ -74,6 +74,9 @@ func (server *ChatServer) Broadcast(msg Message) {
 	server.UserMutex.RLock()
 	defer server.UserMutex.RUnlock()
 	for _, u := range server.Users {
+		if u.id == msg.id { // 自分のtalkメッセージはbroadcastしない
+			continue
+		}
 		u.ch <- msg
 	}
 }

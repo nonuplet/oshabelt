@@ -80,6 +80,7 @@ export class ChatClient {
                 uuid: this.user.uuid,
                 message
             })
+            return res
         } catch (e) {
             console.log(e)
         }

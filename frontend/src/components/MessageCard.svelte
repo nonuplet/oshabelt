@@ -20,7 +20,11 @@
 
 {#if message.type === MessageType.MSG_CONNECT}
     <div class="connected">
-        <p class="text">{message.name} さんが入室しました</p>
+        {#if message.id === $client.user.id}
+            <p class="text">ルームに接続しました</p>
+        {:else}
+            <p class="text">{message.name} さんが入室しました</p>
+        {/if}
     </div>
 {/if}
 
