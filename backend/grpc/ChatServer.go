@@ -7,8 +7,10 @@ import (
 	googleuuid "github.com/google/uuid"
 	"golang.org/x/exp/slog"
 	chatv1 "oshabelt/backend/api/chat/v1"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
 )
 
 type User struct {
@@ -35,6 +37,25 @@ type ChatServer struct {
 func (server *ChatServer) CurrentTime() string {
 	current := time.Now()
 	return current.Format(time.RFC3339)
+}
+
+func (server *ChatServer) Sanitize(message string) (string, bool) {
+	str := strings.ReplaceAll(message, "&", "&amp;")
+	str = strings.ReplaceAll(str, "<", "&lt;")
+	str = strings.ReplaceAll(str, ">", "&gt;")
+	str = strings.ReplaceAll(str, "\"", "&quot;")
+	str = strings.ReplaceAll(str, "'", "&#39;")
+	str = strings.TrimLeftFunc(str, unicode.IsSpace)
+	str = strings.TrimRightFunc(str, unicode.IsSpace)
+	ok := str != ""
+	return str, ok
+}
+
+func (server *ChatServer) ConvertEol(message string) string {
+	// 荒らし防止のため改行は5行まで…
+	str := strings.Replace(message, "\n", "<br/>", 4)
+	str = strings.ReplaceAll(str, "\n", "")
+	return str
 }
 
 func (server *ChatServer) GetUser(uuid string) (*User, bool) {
@@ -132,35 +153,43 @@ func (server *ChatServer) Disconnect(ctx context.Context, req *connect.Request[c
 }
 
 func (server *ChatServer) Talk(ctx context.Context, req *connect.Request[chatv1.TalkRequest]) (*connect.Response[chatv1.MessageResponse], error) {
+	// uuidのチェック
 	uuid := req.Msg.Uuid
-	msg := req.Msg.Message
-
-	// uuid check
 	user, ok := server.GetUser(uuid)
-
-	if ok {
-		slog.Info("[Talk]", "user", user.name, "msg", msg)
-		talk := Message{
-			msgType:   chatv1.MessageType_MSG_TALK,
-			name:      user.name,
-			id:        user.id,
-			message:   msg,
-			timestamp: server.CurrentTime(),
-		}
-		go server.Broadcast(talk)
-
-		res := connect.NewResponse(&chatv1.MessageResponse{
-			Type:      talk.msgType,
-			Name:      talk.name,
-			Id:        talk.id,
-			Message:   talk.message,
-			Timestamp: talk.timestamp,
-		})
-		return res, nil
-	} else {
+	if !ok {
 		slog.Error("[Talk]", "error", "uuid not exist")
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("uuid not exist: %v", uuid))
 	}
+
+	// メッセージのサニタイズ
+	var msg string
+	msg, ok = server.Sanitize(req.Msg.Message)
+	if !ok {
+		slog.Error("[Talk]", "error", "empty text")
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("empty text"))
+	}
+
+	msg = server.ConvertEol(msg)
+
+	slog.Info("[Talk]", "user", user.name, "msg", msg)
+	talk := Message{
+		msgType:   chatv1.MessageType_MSG_TALK,
+		name:      user.name,
+		id:        user.id,
+		message:   msg,
+		timestamp: server.CurrentTime(),
+	}
+	go server.Broadcast(talk)
+
+	res := connect.NewResponse(&chatv1.MessageResponse{
+		Type:      talk.msgType,
+		Name:      talk.name,
+		Id:        talk.id,
+		Message:   talk.message,
+		Timestamp: talk.timestamp,
+	})
+	return res, nil
+
 }
 
 func (server *ChatServer) Subscribe(ctx context.Context, req *connect.Request[chatv1.SubscribeRequest], stream *connect.ServerStream[chatv1.MessageResponse]) error {

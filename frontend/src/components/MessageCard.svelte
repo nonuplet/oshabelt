@@ -5,7 +5,6 @@
 
     export let message: Message
 
-
     $: time = message.timestamp.toLocaleTimeString("ja-JP")
     $: messageStyle = message.id === $client.user.id ? "message self" : "message"
 </script>
@@ -13,7 +12,7 @@
 {#if message.type === MessageType.MSG_TALK}
     <div class={messageStyle}>
         <h3 class="name">{message.name}</h3>
-        <p class="text">{message.message}</p>
+        <p class="text">{@html message.message}</p>
         <p class="timestamp">{time}</p>
     </div>
 {/if}

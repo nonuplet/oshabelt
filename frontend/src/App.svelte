@@ -39,6 +39,7 @@
     }
 
     const talk = async (text: string) => {
+        text = text.trimStart().trimEnd()
         if (text === "") return
         try {
             const res = await $client.talk(text) as MessageResponse
