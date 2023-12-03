@@ -61,8 +61,11 @@ func (server *ChatServer) AddUser(user *User) (*User, error) {
 }
 
 func (server *ChatServer) DeleteUser(uuid string) (*User, error) {
+	server.UserMutex.Lock()
+	server.UserMutex.Unlock()
 	for i, u := range server.Users {
 		if u.uuid == uuid {
+			close(u.ch)
 			server.Users = append(server.Users[:i], server.Users[i+1:]...)
 			return &u, nil
 		}
@@ -115,14 +118,11 @@ func (server *ChatServer) Connect(ctx context.Context, req *connect.Request[chat
 }
 
 func (server *ChatServer) Disconnect(ctx context.Context, req *connect.Request[chatv1.DisconnectRequest]) (*connect.Response[chatv1.DisconnectResponse], error) {
-	server.UserMutex.Lock()
-	server.UserMutex.Unlock()
 	uuid := req.Msg.Uuid
 	user, err := server.DeleteUser(uuid)
 
 	if err == nil {
 		slog.Info("[Disconnect]", "name", user.name, "uuid", user.uuid)
-		close(user.ch)
 		res := connect.NewResponse(&chatv1.DisconnectResponse{})
 		return res, nil
 	} else {
@@ -174,18 +174,28 @@ func (server *ChatServer) Subscribe(ctx context.Context, req *connect.Request[ch
 	}
 
 	slog.Info("[Subscribe]", "send_to", user.name, "uuid", user.uuid)
-	for msg := range user.ch {
-		res := &chatv1.MessageResponse{
-			Type:      msg.msgType,
-			Name:      msg.name,
-			Id:        msg.id,
-			Message:   msg.message,
-			Timestamp: msg.timestamp,
-		}
-		if err := stream.Send(res); err != nil {
-			return err
+
+	for {
+		select {
+		case <-ctx.Done():
+			slog.Warn("[Subscribe]", "send_to", user.name, "status", "closed")
+			defer server.DeleteUser(user.uuid)
+			return ctx.Err()
+		case msg, ok := <-user.ch:
+			if !ok {
+				return nil
+			}
+			res := &chatv1.MessageResponse{
+				Type:      msg.msgType,
+				Name:      msg.name,
+				Id:        msg.id,
+				Message:   msg.message,
+				Timestamp: msg.timestamp,
+			}
+			if err := stream.Send(res); err != nil {
+				slog.Warn("[Subscribe]", "send_to", user.name, "status", "closed")
+				return err
+			}
 		}
 	}
-
-	return nil
 }
